@@ -7,6 +7,7 @@
 var servi = require('servi');
 var cheerio = require('cheerio');
 var request = require('request');
+var fs = require('fs');
 
 //starting server
 var app = new servi(true);
@@ -28,7 +29,14 @@ var lastIndex = rootListings.length;
 var currentLevel = 0;
 var currentLetter;
 var currentIndex = 0;
+var currentPageBody = 'Hello World';
 
+port(3001);
+route('/', requestHandler);
+function requestHandler(request) {
+    request.respond(currentPageBody);
+}
+start();
 
 var o = {
 	"level" : currentLevel,
@@ -65,34 +73,46 @@ function handleData(error, response, body){
 	if (error) console.log(error); //Log Errors
 	$ = cheerio.load(body);
 
-	$('.fbDirectoryBoxColumn').find('.fbDirectoryBoxColumnItem').each(function(){
-		var u = $(this).find('a').attr('href');
-		var t = $(this).text();
+	currentPageBody = body;
+	console.log($('.fbDirectoryBoxColumn').index())
+	if(console.log($('.fbDirectoryBoxColumn').index()) > - 1){
+		$('.fbDirectoryBoxColumn').find('.fbDirectoryBoxColumnItem').each(function(){
+				var u = $(this).find('a').attr('href');
+				var t = $(this).text();
 
-			// console.log('text:',t);
-			// console.log('url:', u);
+					// console.log('text:',t);
+					// console.log('url:', u);
 
-			var currentObject = {
-				"title" : t,
-				"url" : u
-			}
+					var currentObject = {
+						"title" : t,
+						"url" : u
+					}
 
-			//this would temporarily save to the database
-			o.directories[o.directories.length-1].listings.push(currentObject);
-			// console.log('Added listing:', o);
-	});
+					//this would temporarily save to the database
+					o.directories[o.directories.length-1].listings.push(currentObject);
+					// console.log('Added listing:', o);
+			});
 
-	//move on to the next index
-	currentIndex++;
-	currentLetter = rootListings[currentIndex];
+		//move on to the next index
+		currentIndex++;
+		currentLetter = rootListings[currentIndex];
 
-	if(currentIndex < lastIndex){//if we still have indexes to find, keep scraping
-	//if(currentIndex < 2){
-		console.log('calling letter',currentLetter);
-		addDirectory(currentLetter);
-	}else{ //else write to database
-		writeToDatabase();
+		if(currentIndex < lastIndex){//if we still have indexes to find, keep scraping
+		//if(currentIndex < 2){
+			console.log('calling letter',currentLetter);
+			addDirectory(currentLetter);
+		}else{ //else write to database
+			writeToDatabase();
+		}
+	} else {
+		console.log('We hit a CAPTCHA on loading this page: ' + 'https://www.facebook.com/directory/people/'+currentLetter); //report current progress and pause 
+		//PAUSE AND LOAD PAGE
+		fs.writeFile('error_page.html', body, function (err) {
+		  if (err) return console.log(err);
+		  console.log('see error_page.html');
+		});
 	}
+	
 		
 }
 

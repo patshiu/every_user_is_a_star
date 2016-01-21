@@ -1,6 +1,6 @@
 var cheerio = require('cheerio');
 var request = require('request');
-
+var fs = require('fs');
 
 // every servi application must have these 2 lines
 var servi = require("servi");
@@ -8,10 +8,16 @@ var app = new servi(true);
 
 // set the port (defaults to 3000 if you leave out this line)
 port(3001);
+route('/', requestHandler);
+function requestHandler(request) {
+    request.respond(currentPageBody);
+}
+start();
 
 //track progress
 var currentLevel = 1; 
 var currentIndex = 0;
+var currentPageBody = 'hello world';
 
 //Load json DB
 var data = require('./people-1453356599569.json');
@@ -73,49 +79,61 @@ function addDirectory(dirName){
 function handleData(error, response, body){
 	if (error) console.log(error); //Log Errors
 	$ = cheerio.load(body);
-
-	$('.fbDirectoryBoxColumn').find('.fbDirectoryBoxColumnItem').each(function(){
-		var u = $(this).find('a').attr('href');
-		var t = $(this).text();
-
-			// console.log('text:',t);
-			// console.log('url:', u);
-
-			var currentObject = {
-				"title" : t,
-				"url" : u
-			}
-
-			//this would temporarily save to the database
-			o.directories[o.directories.length-1].listings.push(currentObject);
-			// console.log('Added listing:', o);
-	});
+	currentPageBody = body;
 
 
-	//move on to the next index
-	currentIndex++;
-	console.log(data.directories[dirIndex].listings.length);
+	console.log($('.fbDirectoryBoxColumn').index())
+	if ($('.fbDirectoryBoxColumn').index() > -1){ //check if .fbDirectoryBoxColumn class exists
+		$('.fbDirectoryBoxColumn').find('.fbDirectoryBoxColumnItem').each(function(){
+			var u = $(this).find('a').attr('href');
+			var t = $(this).text();
 
-	if(currentIndex < data.directories[dirIndex].listings.length){//if we still have indexes to find, keep scraping
-		parentDirectoryURL = data.directories[dirIndex].listings[currentIndex].url;
-		console.log('adding directory #'+currentIndex+'-'+parentDirectoryURL.replace('https://www.facebook.com/directory/people/', ''));
-		addDirectory(parentDirectoryURL);
-	}else{ //else write to database
-		writeToDatabase();
-		console.log('successfully written to database #'+dirIndex+'-'+data.directories[dirIndex].directoryName.replace('https://www.facebook.com/directory/people/', ''));
-		dirIndex++;
-		//if(dirIndex < data.directories.length){
-		if(dirIndex < 18){ //Re-Scraping A to L
-			currentIndex = 0; 
+				console.log('text:',t);
+				console.log('url:', u);
+
+				var currentObject = {
+					"title" : t,
+					"url" : u
+				}
+
+				//this would temporarily save to the database
+				o.directories[o.directories.length-1].listings.push(currentObject);
+				// console.log('Added listing:', o);
+		});	
+		//move on to the next index
+		currentIndex++;
+		console.log(data.directories[dirIndex].listings.length);
+
+		if(currentIndex < data.directories[dirIndex].listings.length){//if we still have indexes to find, keep scraping
 			parentDirectoryURL = data.directories[dirIndex].listings[currentIndex].url;
-			directoryURL = data.directories[dirIndex].directoryName.replace('https://www.facebook.com/directory/people/', '');
-			name = 'listings-lvl'+currentLevel+'-'+directoryURL+'-'+currentIndex+'-'+time;
-			db = useDatabase(name);
+			console.log('adding directory #'+currentIndex+'-'+parentDirectoryURL.replace('https://www.facebook.com/directory/people/', ''));
 			addDirectory(parentDirectoryURL);
-			console.log('finished writing to database, moving on to #'+dirIndex+'-'+data.directories[dirIndex].directoryName.replace('https://www.facebook.com/directory/people/', ''));
-		} else{
-			console.log('done!');
+		}else{ //else write to database
+			writeToDatabase();
+			console.log('successfully written to database #'+dirIndex+'-'+data.directories[dirIndex].directoryName.replace('https://www.facebook.com/directory/people/', ''));
+			dirIndex++;
+			//if(dirIndex < data.directories.length){
+			if(dirIndex < 3){ //Re-Scraping A to L
+				currentIndex = 0; 
+				parentDirectoryURL = data.directories[dirIndex].listings[currentIndex].url;
+				directoryURL = data.directories[dirIndex].directoryName.replace('https://www.facebook.com/directory/people/', '');
+				name = 'listings-lvl'+currentLevel+'-'+directoryURL+'-'+currentIndex+'-'+time;
+				db = useDatabase(name);
+				addDirectory(parentDirectoryURL);
+				console.log('finished writing to database, moving on to #'+dirIndex+'-'+data.directories[dirIndex].directoryName.replace('https://www.facebook.com/directory/people/', ''));
+			} else{
+				console.log('done!');
+			}
 		}
+
+	} else { //if '.fbDirectoryBoxColumn' is not found, we have hit captcha. 
+		console.log('We hit a CAPTCHA on loading this page: ' + parentDirectoryURL); //report current progress and pause 
+		//PAUSE AND LOAD PAGE
+		fs.writeFile('error_page.html', body, function (err) {
+		  if (err) return console.log(err);
+		  console.log('see error_page.html');
+		});
+
 	}		
 }
 
@@ -123,7 +141,6 @@ function writeToDatabase(){
 	// db.add(o);
 	console.log('Added to db.');
 }
-
 
 
 

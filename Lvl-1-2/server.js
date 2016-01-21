@@ -1,6 +1,7 @@
 var cheerio = require('cheerio');
 var request = require('request');
 var fs = require('fs');
+var prompt = require('prompt');
 
 // every servi application must have these 2 lines
 var servi = require("servi");
@@ -112,8 +113,8 @@ function handleData(error, response, body){
 			writeToDatabase();
 			console.log('successfully written to database #'+dirIndex+'-'+data.directories[dirIndex].directoryName.replace('https://www.facebook.com/directory/people/', ''));
 			dirIndex++;
-			//if(dirIndex < data.directories.length){
-			if(dirIndex < 3){ //Re-Scraping A to L
+			if(dirIndex < data.directories.length){
+			//if(dirIndex < 3){ //Re-Scraping A to L
 				currentIndex = 0; 
 				parentDirectoryURL = data.directories[dirIndex].listings[currentIndex].url;
 				directoryURL = data.directories[dirIndex].directoryName.replace('https://www.facebook.com/directory/people/', '');
@@ -131,10 +132,25 @@ function handleData(error, response, body){
 		//PAUSE AND LOAD PAGE
 		fs.writeFile('error_page.html', body, function (err) {
 		  if (err) return console.log(err);
-		  console.log('see error_page.html');
-		});
-
+		  console.log('see error_page.html\n');
+		  getUserResponse();
+		});		
 	}		
+}
+
+function getUserResponse() {
+	console.log('Hit \'x\' to abort or \'c\' to continue')
+	prompt.get(['input'], function (err, result) {
+		if (err) { return console.log(err); }
+		if(result.input == "x".toLowerCase()){
+			process.exit();
+		} else if(result.input == "c".toLowerCase()){
+			addDirectory(parentDirectoryURL);
+		} else {
+			//console.log(result)
+			getUserResponse();
+		}
+	});
 }
 
 function writeToDatabase(){

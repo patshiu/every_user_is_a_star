@@ -8,11 +8,25 @@ var servi = require('servi');
 var cheerio = require('cheerio');
 var request = require('request');
 var fs = require('fs');
+var prompt = require('prompt');
 
 //starting server
 var app = new servi(true);
-port(3000);
+
+port(3001);
+route('/', requestHandler);
+function requestHandler(request) {
+    request.respond(currentPageBody);
+}
 start();
+
+var o = {
+	"level" : currentLevel,
+	"directories" :  [
+		//"directoryName" : "A", // A
+		//"listings" : []
+		]
+}
 
 var time = new Date().getTime();
 console.log(time);
@@ -31,20 +45,6 @@ var currentLetter;
 var currentIndex = 0;
 var currentPageBody = 'Hello World';
 
-port(3001);
-route('/', requestHandler);
-function requestHandler(request) {
-    request.respond(currentPageBody);
-}
-start();
-
-var o = {
-	"level" : currentLevel,
-	"directories" :  [
-		//"directoryName" : "A", // A
-		//"listings" : []
-		]
-}
 
 currentLetter = rootListings[currentIndex];
 
@@ -62,8 +62,8 @@ function addDirectory(dirName){
 	var options = {
 		url: 'https://www.facebook.com/directory/people/'+currentLetter,
 		headers: {
-			'User-Agent': 'google-analytics',
-			'encoding': 'utf8'
+			'encoding': 'utf8',
+			'User-Agent' : 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.111 Safari/537.36;'
 		}
 	}
 	request(options, handleData); //DONE
@@ -110,10 +110,27 @@ function handleData(error, response, body){
 		fs.writeFile('error_page.html', body, function (err) {
 		  if (err) return console.log(err);
 		  console.log('see error_page.html');
+		  getUserResponse();
 		});
+
 	}
 	
 		
+}
+
+function getUserResponse() {
+	console.log('Hit \'x\' to abort or \'c\' to continue')
+	prompt.get(['input'], function (err, result) {
+		if (err) { return console.log(err); }
+		if(result.input == "x".toLowerCase()){
+			process.exit();
+		} else if(result.input == "c".toLowerCase()){
+			addDirectory(parentDirectoryURL);
+		} else {
+			//console.log(result)
+			getUserResponse();
+		}
+	});
 }
 
 function writeToDatabase(){

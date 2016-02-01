@@ -64,6 +64,7 @@ function addDirectory(dirName){
 		headers: {
 			'encoding': 'utf8',
 			'User-Agent' : 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.111 Safari/537.36;'
+			//'User-Agent' : 'request'
 		}
 	}
 	request(options, handleData); //DONE
@@ -100,7 +101,11 @@ function handleData(error, response, body){
 		if(currentIndex < lastIndex){//if we still have indexes to find, keep scraping
 		//if(currentIndex < 2){
 			console.log('calling letter',currentLetter);
-			addDirectory(currentLetter);
+			//SET TIMEOUT HERE
+			setTimeout(function () {
+				addDirectory(currentLetter);
+			}, Math.random()*1500+2000);
+			
 		}else{ //else write to database
 			writeToDatabase();
 		}
@@ -125,7 +130,7 @@ function getUserResponse() {
 		if(result.input == "x".toLowerCase()){
 			process.exit();
 		} else if(result.input == "c".toLowerCase()){
-			addDirectory(parentDirectoryURL);
+			addDirectory(currentLetter);
 		} else {
 			//console.log(result)
 			getUserResponse();

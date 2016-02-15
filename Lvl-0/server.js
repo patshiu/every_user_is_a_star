@@ -75,8 +75,8 @@ function handleData(error, response, body){
 	$ = cheerio.load(body);
 
 	currentPageBody = body;
-	console.log($('.fbDirectoryBoxColumn').index())
-	if(console.log($('.fbDirectoryBoxColumn').index()) > - 1){
+	console.log('.fbDirectoryBoxColum index: ' + $('.fbDirectoryBoxColumn').index())
+	if($('.fbDirectoryBoxColumn').index() > - 1){
 		$('.fbDirectoryBoxColumn').find('.fbDirectoryBoxColumnItem').each(function(){
 				var u = $(this).find('a').attr('href');
 				var t = $(this).text();
@@ -117,9 +117,7 @@ function handleData(error, response, body){
 		  console.log('see error_page.html');
 		  getUserResponse();
 		});
-
 	}
-	
 		
 }
 

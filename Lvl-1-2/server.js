@@ -16,7 +16,7 @@ function requestHandler(request) {
 start();
 
 //track progress
-var currentLevel = 1; 
+var currentLevel = 1;
 var currentIndex = 0;
 var currentPageBody = 'hello world';
 
@@ -24,14 +24,13 @@ var currentPageBody = 'hello world';
 var data = require('./people-1453356599569.json');
 console.log(data.directories.length);
 
-var dirIndex = 0; 
+var dirIndex = 0;
 
 var parentDirectoryURL = data.directories[dirIndex].listings[currentIndex].url;
 
 var time = new Date().getTime();
-//console.log(time);
 var directoryURL = data.directories[dirIndex].directoryName.replace('https://www.facebook.com/directory/people/', '');
-console.log(directoryURL);
+console.log('directory url: '+directoryURL);
 var name = 'listings-lvl'+currentLevel+'-'+directoryURL+'-'+currentIndex+'-'+time;  //!!!!!
 var db = useDatabase(name);
 
@@ -45,16 +44,24 @@ var db = useDatabase(name);
 
 //for each listing in the json file, create a db file with all the sub listings
 
-var o = {
-	"level" : currentLevel,
+// var o = {
+// 	"level" : currentLevel,
+// 	"directories" :  [
+// 		//"directoryName" : "A", // A
+// 		//"listings" : []
+// 		]
+// }
+
+var dictionary = {
+	"letter" : currentLevel,
 	"directories" :  [
 		//"directoryName" : "A", // A
 		//"listings" : []
 		]
 }
 
-var startingIndex = 0; 
-//for each directory, create a new .db 
+var startingIndex = 0;
+//for each directory, create a new .db
 //then load directory url, and add all sub-directories within that directory to the db
 
 addDirectory(parentDirectoryURL);
@@ -100,7 +107,7 @@ function handleData(error, response, body){
 				//this would temporarily save to the database
 				o.directories[o.directories.length-1].listings.push(currentObject);
 				// console.log('Added listing:', o);
-		});	
+		});
 		//move on to the next index
 		currentIndex++;
 		console.log(data.directories[dirIndex].listings.length);
@@ -115,7 +122,7 @@ function handleData(error, response, body){
 			dirIndex++;
 			if(dirIndex < data.directories.length){
 			//if(dirIndex < 3){ //Re-Scraping A to L
-				currentIndex = 0; 
+				currentIndex = 0;
 				parentDirectoryURL = data.directories[dirIndex].listings[currentIndex].url;
 				directoryURL = data.directories[dirIndex].directoryName.replace('https://www.facebook.com/directory/people/', '');
 				name = 'listings-lvl'+currentLevel+'-'+directoryURL+'-'+currentIndex+'-'+time;
@@ -127,15 +134,15 @@ function handleData(error, response, body){
 			}
 		}
 
-	} else { //if '.fbDirectoryBoxColumn' is not found, we have hit captcha. 
-		console.log('We hit a CAPTCHA on loading this page: ' + parentDirectoryURL); //report current progress and pause 
+	} else { //if '.fbDirectoryBoxColumn' is not found, we have hit captcha.
+		console.log('We hit a CAPTCHA on loading this page: ' + parentDirectoryURL); //report current progress and pause
 		//PAUSE AND LOAD PAGE
 		fs.writeFile('error_page.html', body, function (err) {
 		  if (err) return console.log(err);
 		  console.log('see error_page.html\n');
 		  getUserResponse();
-		});		
-	}		
+		});
+	}
 }
 
 function getUserResponse() {
@@ -157,7 +164,3 @@ function writeToDatabase(){
 	// db.add(o);
 	console.log('Added to db.');
 }
-
-
-
-

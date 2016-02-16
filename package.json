@@ -1,0 +1,29 @@
+{
+  "name": "every_user_is_a_star",
+  "version": "1.0.0",
+  "description": "scrape",
+  "main": "main_server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/patshiu/every_user_is_a_star.git"
+  },
+  "keywords": [
+    "lol"
+  ],
+  "author": "annoyednimous",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/patshiu/every_user_is_a_star/issues"
+  },
+  "homepage": "https://github.com/patshiu/every_user_is_a_star#readme",
+  "dependencies": {
+    "cheerio": "^0.20.0",
+    "fs": "0.0.2",
+    "prompt": "^1.0.0",
+    "request": "^2.69.0",
+    "servi": "0.0.8"
+  }
+}

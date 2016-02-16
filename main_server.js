@@ -15,9 +15,9 @@ function requestHandler(request) {
 start();
 
 
-var time = new Date().getTime();
+var time = new Date();
 console.log(time);
-var name = 'databases/people-'+time;
+var name = 'databases/people-'+time.getMonth()+time.getDay()+'--'+time.getHours()+'-'+time.getMinutes();
 var db = useDatabase(name);
 var links = [];
 
@@ -27,7 +27,7 @@ var directories = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "
 var lastIndex = directories.length;
 
 //track progress
-var currentLevel = 0;
+var currentLevel = 1; //we start at 1 because the directories are 0
 var currentDirectory;
 var currentIndex = 0;
 var currentPageBody = 'Hello World';
@@ -43,7 +43,6 @@ var dictionary = {
 addDirectory(currentDirectory);
 
 function addDirectory(dirName){
-
   var options = {
     url: 'https://www.facebook.com/directory/people/'+currentDirectory,
     headers: {
@@ -62,26 +61,60 @@ function handleData(error, response, body){
   $ = cheerio.load(body);
   currentPageBody = body;
 
-  console.log('index: ' + $('.fbDirectoryBoxColumn').index());
+  console.log('directory link found: ' + ($('.fbDirectoryBoxColumn').index() > -1 ? true : false));
 
   if($('.fbDirectoryBoxColumn').index() > - 1){
-    $('.fbDirectoryBoxColumn').find('.fbDirectoryBoxColumnItem').each(function(){
 
-      if(currentLevel < 4){
-        var u = $(this).find('a').attr('href');
-        var t = $(this).text();
+    var totalListings = $('.fbDirectoryBoxColumn').find('.fbDirectoryBoxColumnItem').length;
 
-        var currentObject = {
-          "title" : t,
-          "url" : u,
-          "level": currentLevel
-        }
+    $('.fbDirectoryBoxColumn').find('.fbDirectoryBoxColumnItem').each(function(index){
 
-        currentLevel++;
-        console.log('current level - '+currentLevel);
+      var u = $(this).find('a').attr('href');
+      var t = $(this).text();
 
-        dictionary.listings.push(currentObject);
+      var currentObject = {
+        "title" : t,
+        "url" : u,
+        "level": currentLevel,
+        "listings": []
+      }
 
+      switch(currentLevel){
+        case 1:
+          dictionary.listings.push(currentObject);
+          break;
+        case 2:
+          dictionary.listings[0].listings.push(currentObject);
+          break;
+        case 3:
+          dictionary.listings[0].listings[0].listings.push(currentObject);
+          break;
+        case 4:
+        //gather every name at once
+        $('.fbDirectoryBoxColumn').find('.fbDirectoryBoxColumnItem').each(function(){
+          var u = $(this).find('a').attr('href');
+          var t = $(this).text();
+
+          var name = {
+            'name': t,
+            'url': u
+          }
+
+          dictionary.listings[0].listings[0].listings[0].listings.push(name);
+        });
+        //TODO write separate child databases on every single "checkIfEnd()" == true
+        writeToDatabase(); //temp just to see the structure
+        //need to set currentLevel back to 0
+          break;
+        default:
+          break;
+      }
+
+      console.log('current level - '+currentLevel);
+      currentLevel++;
+
+
+      if(currentLevel < 5){
         options = {
           url: u,
           headers: {
@@ -90,59 +123,27 @@ function handleData(error, response, body){
             //'User-Agent' : 'request'
           }
         }
-
         request(options, handleData); //HTTP request
-      }else{//we have reached the individual names
-        // var u = $(this).find('a').attr('href');
-        // var t = $(this).text();
+      }else{//we're going back up one level
+      //TODO FIX THIS SHIT
+        // currentLevel--;
+        // if(counter[currentLevel] < totalListings){
+        //   counter[currentLevel] += 1; //we are now pushing to the next listing on the above level
+        // } else {
         //
-        // var currentObject = {
-        //   "title" : t,
-        //   "url" : u,
-        //   "level": currentLevel
         // }
-        // currentLevel++;
-        //
-        // dictionary.listings.push(currentObject);
-        //
-        // writeToDatabase();
+        // checkIfEnd()
+          //if level is root, write and quit
+          //if end, go to parent level
+              //checkIfEnd()
+              //if not, increase counter of current level
+
       }
+
       return false; //this stops the callback from going through all the URL at a given level
     });
 
-    // this is a remnant of bfs
-    //
-    // //move on to the next index
-    // currentIndex++;
-    // currentDirectory = directories[currentIndex];
-    //
-    // if(currentIndex < lastIndex){//if we still have indexes to find, keep scraping
-    // //if(currentIndex < 2){
-    // 	console.log('calling letter',currentDirectory);
-    // 	//SET TIMEOUT HERE
-    // 	setTimeout(function () {
-    // 		addDirectory(currentDirectory);
-    // 	}, Math.random()*1500+2000);
-    //
-    // }else{ //else write to database
-    // 	writeToDatabase();
-    // }
-  }else if(currentLevel == 4){
-    console.log('reached the names');
-
-    var u = $(this).find('a').attr('href');
-    var t = $(this).text();
-
-    var currentObject = {
-      "title" : t,
-      "url" : u,
-      "level": currentLevel
-    }
-    currentLevel++;
-
-    dictionary.listings.push(currentObject);
-
-    writeToDatabase();
+    //TODO this is where we write to the database because we've been through all the nested for loops
   }else{
     console.log('We hit a CAPTCHA on loading this page: ' + 'https://www.facebook.com/directory/people/'+currentDirectory); //report current progress and pause
     //PAUSE AND LOAD PAGE

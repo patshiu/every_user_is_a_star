@@ -17,7 +17,7 @@ start();
 
 var time = new Date().getTime();
 console.log(time);
-var name = 'people-'+time;
+var name = 'databases/people-'+time;
 var db = useDatabase(name);
 var links = [];
 

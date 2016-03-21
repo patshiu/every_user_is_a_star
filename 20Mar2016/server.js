@@ -115,9 +115,9 @@ function processPageData(error, response, body){
     fs.writeFile('error_page.html', body, function (err) {
       if (err) return console.log(err);
       console.log('see error_page.html');
-      //getUserResponse();
+      getUserResponse();
     });
-    console.log("ERROR: Fuckin captchas.");
+    console.log("ERROR: lol lol captchas.");
   }
 }
 
@@ -192,4 +192,19 @@ function riseAndSeekNextBranch(){
   } else { //Else, you're at the last branch of this level rise and seek next branch to process
     riseAndSeekNextBranch();
   }
+}
+
+function getUserResponse() {
+  console.log('Hit \'x\' to abort or \'c\' to continue')
+  prompt.get(['input'], function (err, result) {
+    if (err) { return console.log(err); }
+    if(result.input == "x".toLowerCase()){
+      process.exit();
+    } else if(result.input == "c".toLowerCase()){
+      goDive();
+    } else {
+      //console.log(result)
+      getUserResponse();
+    }
+  });
 }

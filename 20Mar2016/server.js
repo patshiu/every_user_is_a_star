@@ -17,7 +17,7 @@ var obj = {name: 'JP'};
 
 
 // DEPTH FIRST
-// If not at lvl3, store listings, and keep diving till you hit the end of a branch
+// If not at lvl4, store listings, and keep diving till you hit the end of a branch
   //request a page,
   //check it for listings
   //save all listings and their links

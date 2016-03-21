@@ -1,0 +1,25 @@
+{
+  "name": "everyUserIsAStar",
+  "version": "1.0.0",
+  "description": "Every user is a star!",
+  "main": "server.js",
+  "scripts": {
+    "test": "node server.js",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/patshiu/every_user_is_a_star"
+  },
+  "author": "ps pd",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/patshiu/every_user_is_a_star/issues"
+  },
+  "homepage": "https://github.com/patshiu/every_user_is_a_star",
+  "dependencies": {
+    "cheerio": "^0.20.0",
+    "jsonfile": "^2.2.3",
+    "request": "^2.69.0"
+  }
+}

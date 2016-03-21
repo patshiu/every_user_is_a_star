@@ -83,9 +83,20 @@ function goDive(){
   var userAgentOptions = {
     url: nextUrl,
     headers: {
-      'encoding': 'utf8',
-      'User-Agent' : 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.111 Safari/537.36;'
-      //'User-Agent' : 'request'
+      // 'Accept' : 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+      // 'Accept-Encoding' : 'gzip, deflate',
+      // 'Accept-Language' : 'en-US,en;q=0.8,zh-CN;q=0.6,zh;q=0.4',
+      // 'Cache-Control' : 'max-age=0',
+      // 'Connection' : 'keep-alive',
+      // 'Content-Length' : '1338',
+      // 'Content-Type' : 'application/x-www-form-urlencoded',
+      // 'Cookie' : 'datr=MF_wVu3e-LlMy-c8EUZPL-4Q; reg_fb_ref=https%3A%2F%2Fwww.facebook.com%2Fdirectory%2Fpeople%2FA; reg_fb_gate=https%3A%2F%2Fwww.facebook.com%2Fdirectory%2Fpeople%2FA; act=1458593623980%2F1',
+       'Encoding': 'utf8',
+      // 'Host' : 'www.facebook.com',
+      //'Origin' : 'https://www.facebook.com',
+      //'Referer' : 'https://www.facebook.com/directory/people/A',
+      // 'Upgrade-Insecure-Requests' : '1',
+      'User-Agent' : 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.87 Safari/537.36'
     }
   }
   console.log("Requesting page: " + nextUrl);

@@ -13,11 +13,12 @@ var obj = {name: 'JP'};
 //-- LVL 1 - LISTINGS1
 //---- LVL 2 - LISTING2
 //------ LVL 3 - LISTINGS3
-//-------- LVL 4 - PROFILES 4 (Name1, Name2, Name3, Name4, ...)
+//-------- LVL 4 - LISTINGS3
+//---------- LVL 5 - PROFILES (Name1, Name2, Name3, Name4, ...)
 
 
 // DEPTH FIRST
-// If not at lvl4, store listings, and keep diving till you hit the end of a branch
+// If not at lvl5, store listings, and keep diving till you hit the end of a branch
   //request a page,
   //check it for listings
   //save all listings and their links
@@ -37,8 +38,8 @@ var dictionary;
 
 
 //Tree navigation vars
-var currentBranch = [0,0,0,0,0];
-var totalBranches = [0,0,0,0];
+var currentBranch = [0,0,0,0,0,0];
+var totalBranches = [0,0,0,0,0];
 var currentDepth = 0;
 var nextBranchUrl;
 
@@ -70,9 +71,18 @@ function goDive(){
       nextUrl = dictionary.listings[currentBranch[1]].listings[currentBranch[2]].url;
       break;
     case 3:
+      console.log("Case 3");
       nextUrl = dictionary.listings[currentBranch[1]].listings[currentBranch[2]].listings[currentBranch[3]].url;
       break;
     case 4:
+      console.log("Case 4. currentBranch: " + currentBranch[1] + ", " + currentBranch[2] + ", " + currentBranch[3] + ", " + currentBranch[3] + ", " + currentBranch[4]);
+      console.log("Case 4. totalBranches: " + totalBranches[1] + ", " + totalBranches[2] + ", " + totalBranches[3] + ", " + totalBranches[3] + ", " + totalBranches[4]);
+      if(currentBranch[currentDepth] == 0){
+        //GET INFO
+      }
+      nextUrl = dictionary.listings[currentBranch[1]].listings[currentBranch[2]].listings[currentBranch[3]].listings[currentBranch[4]].url;
+      break;
+    case 5:
       console.log("ERROR: goDive() called at profile page level, no further levels to dive into.");
       break;
     default:
@@ -113,12 +123,13 @@ function processPageData(error, response, body){
   //If page is not captcha, get to werkwerkwaerkwaerkwaerk...
   if($('.fbDirectoryBoxColumn').index() > - 1){ //Listings found
     currentDepth++; //we've gone a level in
-    if(currentDepth === 4){
-      getAllProfilesOnPage();
-    } else if (totalBranches[currentDepth] == 0){ //If we need to get listings first
-      getAllListingsOnPage();
+    if(currentDepth === 5){
+      getAllProfilesOnPage($);
+    } else if (totalBranches[currentDepth] === 0){ //If we need to get listings first
+      getAllListingsOnPage($);
       goDive();
     } else { //else, pull URL up from database and go load
+      //check if
       goDive();
     }
   } else {
@@ -140,8 +151,9 @@ function getAllProfilesOnPage($){
       "profileName" : t,
       "url" : u
     };
-    dictionary.listings[currentBranch[1]].listings[currentBranch[2]].listings[currentBranch[3]].listings.push(thisListing); //push to dictionary
+    dictionary.listings[currentBranch[1]].listings[currentBranch[2]].listings[currentBranch[3]].listings[currentBranch[4]].listings.push(thisListing); //push to dictionary
   });
+  console.log("getAllProfilesOnPage() called, total of " + $('.fbDirectoryBoxColumn').find('.fbDirectoryBoxColumnItem').length + " listings.");
 
   jsonfile.writeFile(file, dictionary, {spaces: 2}, function(err) {
     console.error(err);
@@ -151,7 +163,7 @@ function getAllProfilesOnPage($){
 }
 
 function getAllListingsOnPage($){
-  if(totalBranch[curentDepth] == 0){
+  if(totalBranches[currentDepth] === 0){
     //totalBranches[currentDepth] = $('.fbDirectoryBoxColumn').find('.fbDirectoryBoxColumnItem').length;
     totalBranches[currentDepth] = 3;
     $('.fbDirectoryBoxColumn').find('.fbDirectoryBoxColumnItem').each(function(index){ //read and store each link on page
@@ -173,6 +185,9 @@ function getAllListingsOnPage($){
         case 3:
         dictionary.listings[currentBranch[1]].listings[currentBranch[2]].listings.push(thisListing);
           break;
+        case 4:
+        dictionary.listings[currentBranch[1]].listings[currentBranch[2]].listings[currentBranch[3]].listings.push(thisListing);
+          break;
         default:
           console.log("ERROR: GetAllListingsOnPage() called on invalid currenDepth: " + currentDepth);
           break;
@@ -184,12 +199,14 @@ function getAllListingsOnPage($){
 }
 
 function riseAndSeekNextBranch(){
+  currentBranch[currentDepth] = 0;
   currentDepth--;
+
   if(currentDepth < 0){
     console.log("ERROR: currentDepth is at the impossible value of: " + currentDepth);
     process.exit();
   }
-  if(currentDepth === 0 && totalBranch[3] != 0){ //If at top level, and bottom level has been traversed, last write data to file and exit
+  if(currentDepth === 0 && totalBranches[4] != 0){ //If at top level, and bottom level has been traversed, last write data to file and exit
     jsonfile.writeFile(file, dictionary, {spaces: 2}, function(err) {
       console.error(err);
     });
@@ -197,7 +214,8 @@ function riseAndSeekNextBranch(){
     process.exit();
   } else if (currentBranch[currentDepth] < totalBranches[currentDepth]-1){ //Else, proceed to the next branch at the level...
     currentBranch[currentDepth]++;
-    currentBranch[currentDepth+1] = 0; //RESET THE NEXT LEVEL TOTALBRANCHES TO REPOPULATE
+    currentDepth++;
+    //currentBranch[currentDepth+1] = 0; //RESET THE NEXT LEVEL TOTALBRANCHES TO REPOPULATE
     //proceed to process next branch
     goDive();
   } else { //Else, you're at the last branch of this level rise and seek next branch to process

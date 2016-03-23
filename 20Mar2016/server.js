@@ -7,6 +7,7 @@ var prompt = require('prompt');
 
 var file = 'data/data.json';
 var obj = {name: 'JP'};
+var debugFiles = 0;
 
 
 //LVL 0 - ROOT DIRECTORY NAME (Eg. A, B, C, D, E,...)
@@ -40,11 +41,11 @@ var dictionary;
 //Tree navigation vars
 var currentBranch = [0,0,0,0,0,0];
 var totalBranches = [0,0,0,0,0];
-var currentDepth = 0;
+var currentDepth = -1;
 var nextBranchUrl;
 
 
-if(currentDepth == 0){ //if you're a the beginning, it's probably wise to start
+if(currentDepth == -1){ //if you're a the beginning, it's probably wise to start
   goDive();
 }
 
@@ -61,29 +62,28 @@ function goDive(){
   //Grab URL and database
   var nextUrl;
   switch(currentDepth){
-    case 0:
+    case -1: //TODO figure out automatic scraping per top directory later
       nextUrl = 'https://www.facebook.com/directory/people/' + currentDirectory;
       break;
+    case 0:
+      nextUrl = dictionary.listings[currentBranch[0]].url;
+      break;
     case 1:
-      nextUrl = dictionary.listings[currentBranch[1]].url;
+      nextUrl = dictionary.listings[currentBranch[0]].listings[currentBranch[1]].url;
+
       break;
     case 2:
-      nextUrl = dictionary.listings[currentBranch[1]].listings[currentBranch[2]].url;
+      console.log("Case 2");
+      nextUrl = dictionary.listings[currentBranch[0]].listings[currentBranch[1]].listings[currentBranch[2]].url;
       break;
     case 3:
-      console.log("Case 3");
-      nextUrl = dictionary.listings[currentBranch[1]].listings[currentBranch[2]].listings[currentBranch[3]].url;
+      console.log("Case 3. currentBranch: " + currentBranch[0] + ", " + currentBranch[1] + ", " + currentBranch[2] + ", " + currentBranch[3] + ", " + currentBranch[4]);
+      console.log("Case 3. totalBranches: " + totalBranches[0] + ", " + totalBranches[1] + ", " + totalBranches[2] + ", " + totalBranches[3] + ", " + totalBranches[4]);
+      nextUrl = dictionary.listings[currentBranch[0]].listings[currentBranch[1]].listings[currentBranch[2]].listings[currentBranch[3]].url;
       break;
     case 4:
-      console.log("Case 4. currentBranch: " + currentBranch[1] + ", " + currentBranch[2] + ", " + currentBranch[3] + ", " + currentBranch[3] + ", " + currentBranch[4]);
-      console.log("Case 4. totalBranches: " + totalBranches[1] + ", " + totalBranches[2] + ", " + totalBranches[3] + ", " + totalBranches[3] + ", " + totalBranches[4]);
-      if(currentBranch[currentDepth] == 0){
-        //GET INFO
-      }
-      nextUrl = dictionary.listings[currentBranch[1]].listings[currentBranch[2]].listings[currentBranch[3]].listings[currentBranch[4]].url;
-      break;
-    case 5:
       console.log("ERROR: goDive() called at profile page level, no further levels to dive into.");
+      riseAndSeekNextBranch();
       break;
     default:
       console.log("ERROR: goDive() called at" + currentDepth + "no further levels to dive into.");
@@ -123,7 +123,7 @@ function processPageData(error, response, body){
   //If page is not captcha, get to werkwerkwaerkwaerkwaerk...
   if($('.fbDirectoryBoxColumn').index() > - 1){ //Listings found
     currentDepth++; //we've gone a level in
-    if(currentDepth === 5){
+    if(currentDepth === 4){
       getAllProfilesOnPage($);
     } else if (totalBranches[currentDepth] === 0){ //If we need to get listings first
       getAllListingsOnPage($);
@@ -151,21 +151,28 @@ function getAllProfilesOnPage($){
       "profileName" : t,
       "url" : u
     };
-    dictionary.listings[currentBranch[1]].listings[currentBranch[2]].listings[currentBranch[3]].listings[currentBranch[4]].listings.push(thisListing); //push to dictionary
-  });
+    dictionary.listings[currentBranch[0]].listings[currentBranch[1]].listings[currentBranch[2]].listings[currentBranch[3]].listings.push(thisListing); //push to dictionary
+  }, writeFile());
   console.log("getAllProfilesOnPage() called, total of " + $('.fbDirectoryBoxColumn').find('.fbDirectoryBoxColumnItem').length + " listings.");
+  //go up a level
 
+}
+
+function writeFile(){
+  debugFiles++;
+  file = 'data/data-' + debugFiles + "_Depth-"+ currentDepth + '.json';
   jsonfile.writeFile(file, dictionary, {spaces: 2}, function(err) {
+    console.log("writeFile() called. at depth of " + currentDepth);
+    console.log("Saved to " + file  + "\n\n\n");
     console.error(err);
   }); //write to file after each profile-level scrape
-  //go up a level
-  riseAndSeekNextBranch();
 }
 
 function getAllListingsOnPage($){
   if(totalBranches[currentDepth] === 0){
     //totalBranches[currentDepth] = $('.fbDirectoryBoxColumn').find('.fbDirectoryBoxColumnItem').length;
-    totalBranches[currentDepth] = 3;
+    totalBranches[currentDepth] = 2;
+    var totalListings = 0;
     $('.fbDirectoryBoxColumn').find('.fbDirectoryBoxColumnItem').each(function(index){ //read and store each link on page
       //___ LISTING SUBJECT
       var u = $(this).find('a').attr('href');
@@ -175,51 +182,72 @@ function getAllListingsOnPage($){
         "url" : u,
         "listings": []
       }
+      totalListings++;
       switch(currentDepth){
-        case 1:
+        case 0:
           dictionary.listings.push(thisListing);
           break;
+        case 1:
+          dictionary.listings[currentBranch[0]].listings.push(thisListing);
+          break;
         case 2:
-          dictionary.listings[currentBranch[1]].listings.push(thisListing);
+          dictionary.listings[currentBranch[0]].listings[currentBranch[1]].listings.push(thisListing);
           break;
         case 3:
-        dictionary.listings[currentBranch[1]].listings[currentBranch[2]].listings.push(thisListing);
+          dictionary.listings[currentBranch[0]].listings[currentBranch[1]].listings[currentBranch[2]].listings.push(thisListing);
           break;
-        case 4:
-        dictionary.listings[currentBranch[1]].listings[currentBranch[2]].listings[currentBranch[3]].listings.push(thisListing);
+        case 4: //PROFILE LEVEL
+          console.log("ERROR: GetAllListingsOnPage() called on profile level. currenDepth: " + currentDepth);
           break;
         default:
           console.log("ERROR: GetAllListingsOnPage() called on invalid currenDepth: " + currentDepth);
           break;
       }
     });
+    //totalBranches[currentDepth] = totalListings;
   } else {
     console.log("ERROR: getAllListingsOnPage() called on a non-empty branch. currentDepth: " + currentDepth +"  currentBranch: " + currentBranch[currentDepht]);
   }
 }
 
 function riseAndSeekNextBranch(){
+
+  console.log("riseAndSeekNextBranch() called at currentDepth " + currentDepth );
   currentBranch[currentDepth] = 0;
   currentDepth--;
+  console.log("Rising up one level to " + currentDepth);
 
-  if(currentDepth < 0){
-    console.log("ERROR: currentDepth is at the impossible value of: " + currentDepth);
-    process.exit();
-  }
-  if(currentDepth === 0 && totalBranches[4] != 0){ //If at top level, and bottom level has been traversed, last write data to file and exit
-    jsonfile.writeFile(file, dictionary, {spaces: 2}, function(err) {
-      console.error(err);
-    });
+  if(currentDepth === -1){ //If at top level, and bottom level has been traversed, last write data to file and exit
+    // jsonfile.writeFile(file, dictionary, {spaces: 2}, function(err) {
+    //   console.error(err);
+    // });
     console.log("Success and joy to all mankind. Data exported to: " + file);
-    process.exit();
-  } else if (currentBranch[currentDepth] < totalBranches[currentDepth]-1){ //Else, proceed to the next branch at the level...
-    currentBranch[currentDepth]++;
-    currentDepth++;
-    //currentBranch[currentDepth+1] = 0; //RESET THE NEXT LEVEL TOTALBRANCHES TO REPOPULATE
-    //proceed to process next branch
-    goDive();
-  } else { //Else, you're at the last branch of this level rise and seek next branch to process
-    riseAndSeekNextBranch();
+    process.exit()
+  }
+
+  //At the risen depth, check if there are more listings
+  if(totalBranches[currentDepth] != 0){ //if listing's were previously scraped
+    if(currentBranch[currentDepth] < totalBranches[currentDepth]-1){
+      currentBranch[currentDepth]++;
+      console.log("Moving on to next branch.");
+      console.log("currentBranch: " + currentBranch[0] + ", " + currentBranch[1] + ", " + currentBranch[2] + ", " + currentBranch[3] + ", " + currentBranch[4]);
+      console.log("totalBranches: " + totalBranches[0] + ", " + totalBranches[1] + ", " + totalBranches[2] + ", " + totalBranches[3] + ", " + totalBranches[4]);
+      goDive();//go load the next url
+    } else {
+      totalBranches[currentDepth] = 0; //We've finished traversing all branches at this level, so reset to zero before rising up.
+      console.log("At last branch, rising on up again.  ");
+      console.log("currentBranch: " + currentBranch[0] + ", " + currentBranch[1] + ", " + currentBranch[2] + ", " + currentBranch[3] + ", " + currentBranch[4]);
+      console.log("totalBranches: " + totalBranches[0] + ", " + totalBranches[1] + ", " + totalBranches[2] + ", " + totalBranches[3] + ", " + totalBranches[4]);
+      riseAndSeekNextBranch();
+    }
+  } else if(totalBranches[currentDepth] === 0){ //If there are no listings at the currentDepth.... which should only exist on the first run, where all totalBranches are zero, or if we hit a previously unscraped page
+      console.log("This is very odd... we've arrived at a node with no branches to pursue?");
+      console.log("CurrentDepth: " + currentDepth);
+      console.log("currentBranch: " + currentBranch[0] + ", " + currentBranch[1] + ", " + currentBranch[2] + ", " + currentBranch[3] + ", " + currentBranch[4]);
+      console.log("totalBranches: " + totalBranches[0] + ", " + totalBranches[1] + ", " + totalBranches[2] + ", " + totalBranches[3] + ", " + totalBranches[4]);
+      riseAndSeeekNextBranch();
+  } else if (currentDepth === 5){
+      console.log("This is very odd... riseAndSeeekNextBranch() was called but we're at depth of 5.")
   }
 }
 
@@ -228,7 +256,6 @@ function getUserResponse() {
   prompt.get(['input'], function (err, result) {
     if (err) { return console.log(err); }
     if(result.input == "x".toLowerCase()){
-      process.exit();
     } else if(result.input == "c".toLowerCase()){
       goDive();
     } else {

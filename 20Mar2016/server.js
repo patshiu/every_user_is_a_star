@@ -152,19 +152,27 @@ function getAllProfilesOnPage($){
       "url" : u
     };
     dictionary.listings[currentBranch[0]].listings[currentBranch[1]].listings[currentBranch[2]].listings[currentBranch[3]].listings.push(thisListing); //push to dictionary
-  }, writeFile());
+    console.log( "PUSHING TO:" + dictionary.listings[currentBranch[0]].listings[currentBranch[1]].listings[currentBranch[2]].listings[currentBranch[3]].range);
+    console.log( "NEW LISTING:" + dictionary.listings[currentBranch[0]].listings[currentBranch[1]].listings[currentBranch[2]].listings[currentBranch[3]].listings[0].profileName);
+    console.log( "NEW LISTING:" + dictionary.listings[currentBranch[0]].listings[currentBranch[1]].listings[currentBranch[2]].listings[currentBranch[3]].listings[0].url);
+
+  }, writeFile(dictionary));
   console.log("getAllProfilesOnPage() called, total of " + $('.fbDirectoryBoxColumn').find('.fbDirectoryBoxColumnItem').length + " listings.");
   //go up a level
 
 }
 
-function writeFile(){
+function writeFile(data){
   debugFiles++;
   file = 'data/data-' + debugFiles + "_Depth-"+ currentDepth + '.json';
-  jsonfile.writeFile(file, dictionary, {spaces: 2}, function(err) {
+  jsonfile.writeFile(file, data, {spaces: 2}, function(err) {
+    var name = dictionary.listings[currentBranch[0]].listings[currentBranch[1]].listings[currentBranch[2]].listings[currentBranch[3]].listings[0].profileName;
+    var url = dictionary.listings[currentBranch[0]].listings[currentBranch[1]].listings[currentBranch[2]].listings[currentBranch[3]].listings[0].url;
+    console.log("PROFILE PUSHED. profileName: " + name + "  url: " + url);
+    console.log("PARENT || parent range: " + dictionary.listings[currentBranch[0]].listings[currentBranch[1]].listings[currentBranch[2]].listings[currentBranch[3]].range + " listing's length: " + dictionary.listings[currentBranch[0]].listings[currentBranch[1]].listings[currentBranch[2]].listings[currentBranch[3]].listings.length)
     console.log("writeFile() called. at depth of " + currentDepth);
     console.log("Saved to " + file  + "\n\n\n");
-    console.error(err);
+    if(err){console.error(err);}
   }); //write to file after each profile-level scrape
 }
 
@@ -206,7 +214,7 @@ function getAllListingsOnPage($){
     });
     //totalBranches[currentDepth] = totalListings;
   } else {
-    console.log("ERROR: getAllListingsOnPage() called on a non-empty branch. currentDepth: " + currentDepth +"  currentBranch: " + currentBranch[currentDepht]);
+    console.log("ERROR: getAllListingsOnPage() called on a non-empty branch. currentDepth: " + currentDepth +"  currentBranch: " + currentBranch[currentDepth]);
   }
 }
 
